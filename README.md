@@ -13,14 +13,14 @@ Code-Mixed Hate Classification
 
 ### Ideas for the work
 
- [ ] Hierarcical Transformer for classification
+ - [ ] Hierarcical Transformer for classification
  
- [ ] Effectiveness of transfer learning from one dataset to another
+ - [ ] Effectiveness of transfer learning from one dataset to another
  
- [ ] Pseudo labelling for multi-task learning
+ - [ ] Pseudo labelling for multi-task learning
  
- [ ] Causal interpretation of model to interpret contribution of individual tokens to the final target
+ - [ ] Causal interpretation of model to interpret contribution of individual tokens to the final target
  
- [ ] Attribution of each token to hate, sarcasm, irony, humor
+ - [ ] Attribution of each token to hate, sarcasm, irony, humor
 
 
