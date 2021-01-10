@@ -13,7 +13,7 @@ Code-Mixed Hate Classification
 
 ### Ideas for the work
 
- - [ ] Hierarcical Transformer for classification
+ - [ ] Transformer for classification
  
  - [ ] Effectiveness of transfer learning from one dataset to another
  
