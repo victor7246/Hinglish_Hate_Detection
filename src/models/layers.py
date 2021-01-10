@@ -278,11 +278,47 @@ class MultiHeadSelfAttention(layers.Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[1], self.embed_dim
 
+class OuterProductMHSA(layers.Layer):
+    def __init__(self, embed_dim):
+        super(OuterProductMHSA, self).__init__()
+        self.embed_dim = embed_dim
+        
+        self.query_dense = layers.Dense(embed_dim)
+        self.key_dense = layers.Dense(embed_dim)
+        self.value_dense = layers.Dense(embed_dim)
+
+    def outer_product_attention(self, query, key, value):
+        score = tf.einsum('bnd,bmd->bnmd', query, key)
+        weights = tf.nn.softmax(score, axis=2)
+        output = tf.einsum('bnmd,bmd->bnd', score, value)
+        return output, weights
+
+    def call(self, inputs):
+        # x.shape = [batch_size, seq_len, embedding_dim]
+        batch_size = tf.shape(inputs)[0]
+        query = self.query_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        key = self.key_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        value = self.value_dense(inputs)  # (batch_size, seq_len, embed_dim)
+
+        attention, weights = self.outer_product_attention(query, key, value)
+        
+        return attention
+    
+    def compute_output_shape(self, input_shape):
+        return input_shape[0], input_shape[1], self.embed_dim
+
 class TransformerBlock(layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+    def __init__(self, embed_dim, num_heads, ff_dim, outer_attention=False, rate=0.1):
         super(TransformerBlock, self).__init__()
         self.embed_dim = embed_dim
-        self.att = MultiHeadSelfAttention(embed_dim, num_heads)
+        self.outer_attention = outer_attention
+        if outer_attention == False:
+            self.att = MultiHeadSelfAttention(embed_dim, num_heads)
+        else:
+            self.att1 = OuterProductMHSA(embed_dim)
+            self.att2 = MultiHeadSelfAttention(embed_dim, num_heads)
+            self.attn_weights = layers.Dense(1)
+
         self.ffn = keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
         )
@@ -292,7 +328,14 @@ class TransformerBlock(layers.Layer):
         self.dropout2 = layers.Dropout(rate)
 
     def call(self, inputs, training):
-        attn_output = self.att(inputs)
+        if self.outer_attention == False:
+            attn_output = self.att(inputs)
+        else:
+            mha_attn = self.att2(inputs)
+            outer_attn = self.att1(inputs)
+            weights = tf.nn.sigmoid(self.attn_weights(mha_attn))
+            attn_output = weights*mha_attn + (1-weights)*outer_attn
+
         attn_output = self.dropout1(attn_output, training=training)
         out1 = self.layernorm1(inputs + attn_output)
         ffn_output = self.ffn(out1)

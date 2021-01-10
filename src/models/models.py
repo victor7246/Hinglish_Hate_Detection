@@ -395,6 +395,72 @@ def HIT(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=Fals
 
     return model
 
+def HIT_outer(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None,\
+                             n_heads=8, max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
+
+    assert emb_dim%n_heads == 0
+    
+    char_inputs = tf.keras.layers.Input((max_word_char_len,), dtype=tf.int32)
+
+    embedding_layer = TokenAndPositionEmbedding(max_word_char_len, char_vocab_size, emb_dim)
+    x = embedding_layer(char_inputs)
+    
+    transformer_blocks = []
+    
+    for i in range(n_layers):
+        transformer_blocks.append(TransformerBlock(emb_dim, n_heads, n_units,outer_attention=True))
+        
+    for i in range(n_layers):
+        x = transformer_blocks[i](x)
+    
+    out = AttentionWithContext(name='char_attention')(x)
+    char_model = tf.keras.models.Model(inputs=char_inputs, outputs=out)
+    #print (char_model.summary())
+    
+    word_inputs = tf.keras.layers.Input((max_text_len,), dtype=tf.int32)
+    char_inputs = tf.keras.layers.Input((max_char_len,), dtype=tf.int32)
+    subword_inputs = tf.keras.layers.Input((max_text_len,max_word_char_len,), dtype=tf.int32)
+    wpe_inputs = tf.keras.layers.Input((max_char_len,), dtype=tf.int32)
+
+    x = tf.keras.layers.TimeDistributed(char_model)(subword_inputs)
+    
+    embedding_layer = PositionEmbedding(max_text_len, emb_dim)
+    position = embedding_layer(word_inputs)
+    
+    x = x + position
+    
+    word_embbeding = tf.keras.layers.Embedding(word_vocab_size, emb_dim, input_length = max_text_len)(word_inputs)
+
+    x = x + word_embbeding
+
+    transformer_blocks = []
+    
+    for i in range(n_layers):
+        transformer_blocks.append(TransformerBlock(emb_dim, n_heads, n_units, outer_attention=True))
+        
+    for i in range(n_layers):
+        x = transformer_blocks[i](x)
+    
+    if seq_output == False:
+        x = tf.keras.layers.GlobalAveragePooling1D()(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    
+    if vectorizer_shape:
+        tfidf = tf.keras.layers.Input((vectorizer_shape,))
+        x = tf.keras.layers.Dense(n_units)(tf.keras.layers.Concatenate()([x,tfidf]))
+    else:
+        x = tf.keras.layers.Dense(n_units)(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    
+    out = tf.keras.layers.Dense(n_out, activation='softmax')(x)
+    
+    if vectorizer_shape:
+        model = tf.keras.models.Model([word_inputs,char_inputs,subword_inputs,wpe_inputs,tfidf], out)
+    else:
+        model = tf.keras.models.Model([word_inputs,char_inputs,subword_inputs,wpe_inputs], out)
+
+    return model
+
 def HIT_without_words(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None,\
                              n_heads=8, max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
 
@@ -461,6 +527,72 @@ def HIT_without_words(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, s
 
     return model
 
+def HIT_outer_without_words(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None,\
+                             n_heads=8, max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
+
+    assert emb_dim%n_heads == 0
+    
+    char_inputs = tf.keras.layers.Input((max_word_char_len,), dtype=tf.int32)
+
+    embedding_layer = TokenAndPositionEmbedding(max_word_char_len, char_vocab_size, emb_dim)
+    x = embedding_layer(char_inputs)
+    
+    transformer_blocks = []
+    
+    for i in range(n_layers):
+        transformer_blocks.append(TransformerBlock(emb_dim, n_heads, n_units, outer_attention=True))
+        
+    for i in range(n_layers):
+        x = transformer_blocks[i](x)
+    
+    out = AttentionWithContext(name='char_attention')(x)
+    char_model = tf.keras.models.Model(inputs=char_inputs, outputs=out)
+    #print (char_model.summary())
+    
+    word_inputs = tf.keras.layers.Input((max_text_len,), dtype=tf.int32)
+    char_inputs = tf.keras.layers.Input((max_char_len,), dtype=tf.int32)
+    subword_inputs = tf.keras.layers.Input((max_text_len,max_word_char_len,), dtype=tf.int32)
+    wpe_inputs = tf.keras.layers.Input((max_char_len,), dtype=tf.int32)
+
+    x = tf.keras.layers.TimeDistributed(char_model)(subword_inputs)
+    
+    embedding_layer = PositionEmbedding(max_text_len, emb_dim)
+    position = embedding_layer(word_inputs)
+    
+    x = x + position
+    
+    #word_embbeding = tf.keras.layers.Embedding(word_vocab_size, emb_dim, input_length = max_text_len)(word_inputs)
+
+    #x = x + word_embbeding
+
+    transformer_blocks = []
+    
+    for i in range(n_layers):
+        transformer_blocks.append(TransformerBlock(emb_dim, n_heads, n_units, outer_attention=True))
+        
+    for i in range(n_layers):
+        x = transformer_blocks[i](x)
+    
+    if seq_output == False:
+        x = tf.keras.layers.GlobalAveragePooling1D()(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    
+    if vectorizer_shape:
+        tfidf = tf.keras.layers.Input((vectorizer_shape,))
+        x = tf.keras.layers.Dense(n_units)(tf.keras.layers.Concatenate()([x,tfidf]))
+    else:
+        x = tf.keras.layers.Dense(n_units)(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    
+    out = tf.keras.layers.Dense(n_out, activation='softmax')(x)
+    
+    if vectorizer_shape:
+        model = tf.keras.models.Model([word_inputs,char_inputs,subword_inputs,wpe_inputs,tfidf], out)
+    else:
+        model = tf.keras.models.Model([word_inputs,char_inputs,subword_inputs,wpe_inputs], out)
+
+    return model
+
 def Transformer(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None,\
                              n_heads=8, max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
 
@@ -502,5 +634,6 @@ def Transformer(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_out
 
     return model
 
-all_models = {HIT.__name__:HIT, HIT_without_words.__name__: HIT_without_words, Transformer.__name__: Transformer,\
- CS_ELMO.__name__: CS_ELMO, CS_ELMO_without_words.__name__:CS_ELMO_without_words, HAN.__name__: HAN, CMSA.__name__: CMSA, WLSTM.__name__: WLSTM}
+all_models = {HIT.__name__:HIT, HIT_outer.__name__:HIT_outer, HIT_without_words.__name__: HIT_without_words, HIT_outer_without_words.__name__: HIT_outer_without_words,\
+            Transformer.__name__: Transformer, CS_ELMO.__name__: CS_ELMO, CS_ELMO_without_words.__name__:CS_ELMO_without_words, HAN.__name__: HAN, \
+            CMSA.__name__: CMSA, WLSTM.__name__: WLSTM}
