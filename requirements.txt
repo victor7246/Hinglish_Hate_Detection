@@ -4,6 +4,7 @@ Sphinx
 coverage
 flake8
 python-dotenv
+tensorflow==2.2.0-rc3
 pandas
 numpy
 tqdm

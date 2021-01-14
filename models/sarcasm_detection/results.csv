@@ -1,0 +1,5 @@
+config,weighted_f1,macro_f1
+"{'text_max_len': 30, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'Transformer', 'loss': 'ce', 'use_features': True}",0.9803407939578151,0.9492263056092842
+"{'text_max_len': 30, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'Transformer', 'loss': 'ce', 'use_features': False}",0.9722403082488008,0.9277541873083273
+"{'text_max_len': 30, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'Transformer', 'loss': 'focal', 'use_features': True}",0.9745496112269275,0.9345191837204616
+"{'text_max_len': 30, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'Transformer', 'loss': 'focal', 'use_features': False}",0.9743342298262401,0.9334594273123458
