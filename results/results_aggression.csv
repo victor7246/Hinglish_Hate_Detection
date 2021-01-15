@@ -1,0 +1,6 @@
+config,weighted_f1,macro_f1
+"{'text_max_len': 40, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'HAN', 'loss': 'ce', 'use_features': False}",0.898713971897655,0.8989735477140823
+"{'text_max_len': 40, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'Transformer', 'loss': 'ce', 'use_features': False}",0.8928204913201907,0.8918704228808366
+"{'text_max_len': 40, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'Transformer', 'loss': 'focal', 'use_features': False}",0.8881033101245984,0.88729137289058
+"{'text_max_len': 40, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'CS_ELMO_without_words', 'loss': 'ce', 'use_features': False}",0.6126434164111794,0.6110140231634359
+"{'text_max_len': 40, 'char_max_len': 150, 'word_char_max_len': 20, 'n_units': 128, 'emb_dim': 128, 'n_layers': 2, 'epochs': 500, 'learning_rate': 0.001, 'model_name': 'CS_ELMO_without_words', 'loss': 'focal', 'use_features': False}",0.5563634347742605,0.5556628950953444
