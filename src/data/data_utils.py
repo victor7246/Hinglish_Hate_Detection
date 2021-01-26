@@ -100,6 +100,62 @@ class CoNLLSeqData(object):
             lines = [line.strip() for line in fp]
         return lines
         
+class CoNLLData(object):
+    def __init__(self, filepath, word_index=0, label_index=2, label_identifier='meta'):
+        self.word_index = word_index
+        self.label_index = label_index
+        self.label_identifier = label_identifier
+
+        self.words, self.start_list, self.end_list  = self.read_conll_format(filepath)
+        self.labels = self.read_conll_format_labels(filepath)
+        #assert len(self.words) == len(self.labels)
+        self.sentence = ["sentence_{}".format(i+1) for i in range(len(self.words))]
+        
+
+    def read_conll_format_labels(self, filename):
+        lines = self.read_lines(filename) + ['']
+        posts, post = [], []
+        for line in lines:
+            if line:
+                if line.split('\t')[0] == self.label_identifier and len(line.split('\t')) > 2:
+                    probs = line.split("\t")[self.label_index]
+                    post.append(probs)
+                #print("post: ", post)
+            elif len(post) > 0:
+                posts.append(post[0])
+                post = []
+        # a list of lists of words/ labels
+        return posts
+
+    def read_conll_format(self, filename):
+        lines = self.read_lines(filename) + ['']
+        posts, post = [], []
+        start_list, end_list, starts, ends = [], [], [], []
+        start, end = 0, 0
+        for line in lines:
+            if line:
+                if len(line.split('\t')) <= 2:
+                    start = end + 1
+                    words = line.split("\t")[self.word_index]
+                    end = start + len(words) 
+                    # print("words: ", words)
+                    post.append(words.lower())
+                    starts.append(start)
+                    ends.append(end)
+            elif post:
+                posts.append(post)
+                start_list.append(starts)
+                end_list.append(ends)
+                post = []
+                start, end = 0, 0
+        # a list of lists of words/ labels
+        return posts, start_list, end_list
+
+    def read_lines(self, filename):
+        with open(filename, 'r') as fp:
+            lines = [line.strip() for line in fp]
+        return lines
+
 def _convert_to_transformer_inputs(text, tokenizer, max_sequence_length, text2=None, bertweettokenizer=False):
     """Converts tokenized input to ids, masks and segments for transformer (including bert)"""
     
