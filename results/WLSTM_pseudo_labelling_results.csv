@@ -1,7 +1,7 @@
-,,,,,,
-,Dataset,Weighted F1,Macro F1,Weighted F1 (Without Pseudo),Macro F1 (Without Pseudo),
-,Hate,0.910,0.895,0.941,0.931,
-,Humor,0.922,0.919,0.929,0.926,
-,Sarcasm,0.969,0.921,0.972,0.928,
-,Aggression,0.843,0.838,0.893,0.892,
-,Stance,0.840,0.767,0.878,0.813,
+,,,,,
+,Dataset,Weighted F1,Macro F1,Weighted F1 (Without Pseudo),Macro F1 (Without Pseudo)
+,Hate,0.915,0.899,0.917,0.902
+,Humor,0.892,0.889,0.909,0.906
+,Sarcasm,0.959,0.891,0.957,0.884
+,Aggression,0.893,0.892,0.890,0.891
+,Stance,0.895,0.867,0.893,0.857
