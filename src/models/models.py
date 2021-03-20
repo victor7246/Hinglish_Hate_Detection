@@ -3,7 +3,7 @@ import numpy as np
 from .layers import *
 from transformers import TFAutoModel, AutoTokenizer, AutoConfig
 
-def WLSTM(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None, \
+def WLSTM(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, \
          max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
     
     word_inputs = tf.keras.layers.Input((max_text_len,), dtype=tf.int32)
@@ -44,7 +44,7 @@ def WLSTM(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=Fa
 
     return model
 
-def CLSTM(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None, \
+def CLSTM(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, \
          max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
     
     word_inputs = tf.keras.layers.Input((max_text_len,), dtype=tf.int32)
@@ -86,7 +86,7 @@ def CLSTM(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=Fa
     return model
 
 
-def CMSA(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None, kernel_size=3, \
+def CMSA(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, kernel_size=3, \
          max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
     
     word_inputs = tf.keras.layers.Input((max_text_len,), dtype=tf.int32)
@@ -141,7 +141,7 @@ def CMSA(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=Fal
     return model
 
 
-def HAN(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None, \
+def HAN(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, \
         max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
     
     char_inputs = tf.keras.layers.Input((max_word_char_len,), dtype=tf.int32)
@@ -194,7 +194,7 @@ def HAN(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=Fals
 
     return model
 
-def CS_ELMO(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None, \
+def CS_ELMO(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, \
             max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
 
     assert emb_dim == n_units
@@ -262,7 +262,7 @@ def CS_ELMO(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=
 
     return model
 
-def CS_ELMO_without_words(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None, \
+def CS_ELMO_without_words(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, \
             max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
 
     assert emb_dim == n_units
@@ -330,7 +330,7 @@ def CS_ELMO_without_words(word_vocab_size, char_vocab_size, wpe_vocab_size, n_ou
 
     return model
 
-def Transformer(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, seq_output=False, vectorizer_shape=None,\
+def Transformer(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None,\
                              n_heads=8, max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
 
     assert emb_dim%n_heads == 0

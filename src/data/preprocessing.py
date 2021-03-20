@@ -1,6 +1,6 @@
 import re
 import nltk
-import spacy
+#import spacy
 from sklearn import feature_extraction 
 
 def clean_tweets(text):
