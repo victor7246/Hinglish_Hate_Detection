@@ -53,7 +53,6 @@ def custom_wp_tokenizer(corpus,text_filepath,tokenizer_save_path,vocab_size=1000
         pass
 
     tokenizer = tokenizers.BertWordPieceTokenizer(
-            vocab_file=None,
             unk_token='[UNK]',
             sep_token='[SEP]',
             cls_token='[CLS]',

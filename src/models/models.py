@@ -399,5 +399,51 @@ def BERT(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_mo
 
     return model
 
+def MEMNet(word_vocab_size, char_vocab_size, wpe_vocab_size, n_out, transformer_model_pretrained_path='roberta-base', seq_output=False, vectorizer_shape=None, \
+         max_word_char_len=20, max_text_len=20, max_char_len=100, n_layers=2, n_units=128, emb_dim=128):
+    
+    word_inputs = tf.keras.layers.Input((max_text_len,), dtype=tf.int32)
+    char_inputs = tf.keras.layers.Input((max_char_len,), dtype=tf.int32)
+    subword_inputs = tf.keras.layers.Input((max_text_len,max_word_char_len,), dtype=tf.int32)
+    wpe_inputs = tf.keras.layers.Input((max_char_len,), dtype=tf.int32)
+
+    emb = tf.keras.layers.Embedding(word_vocab_size, emb_dim, input_length = max_text_len)(word_inputs)
+    
+    if n_layers == 1:
+        if seq_output == False:
+            lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(n_units, dropout=0.2, return_sequences=False))(emb)
+        else:
+            lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(n_units, dropout=0.2, return_sequences=True))(emb)
+    else:
+        lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(n_units, dropout=0.2, return_sequences=True))(emb)
+        for i in range(n_layers-2):
+            lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(n_units, dropout=0.2, return_sequences=True))(lstm)
+        if seq_output == False:
+            lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(n_units, dropout=0.2, return_sequences=False))(lstm)
+        else:
+            lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(n_units, dropout=0.2, return_sequences=True))(lstm)
+    
+    mem1 = MemoryRepresentation(input_dim=2*n_units,output_dim=2*n_units, num_hops=3)(lstm) + lstm
+    mem2 = MemoryRepresentation(input_dim=2*n_units,output_dim=2*n_units, num_hops=3)(mem1) + mem1
+
+    mem2 = tf.keras.layers.GlobalAveragePooling1D()(mem2)
+
+    if vectorizer_shape:
+        tfidf = tf.keras.layers.Input((vectorizer_shape,))
+        dense = tf.keras.layers.Dense(n_units)(tf.keras.layers.Concatenate()([mem2, tfidf]))
+    else:
+        dense = tf.keras.layers.Dense(n_units)(mem2)
+    
+    dense = tf.keras.layers.Dropout(.2)(dense)
+    
+    out = tf.keras.layers.Dense(n_out, activation='softmax')(dense)
+    
+    if vectorizer_shape:
+        model = tf.keras.models.Model([word_inputs,char_inputs,subword_inputs,wpe_inputs,tfidf], out)
+    else:
+        model = tf.keras.models.Model([word_inputs,char_inputs,subword_inputs,wpe_inputs], out)
+
+    return model
+
 all_models = {BERT.__name__: BERT, Transformer.__name__: Transformer, CS_ELMO.__name__: CS_ELMO, CS_ELMO_without_words.__name__:CS_ELMO_without_words, HAN.__name__: HAN, \
-            CMSA.__name__: CMSA, WLSTM.__name__: WLSTM}
+            CMSA.__name__: CMSA, WLSTM.__name__: WLSTM, MEMNet.__name__: MEMNet}

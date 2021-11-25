@@ -3,6 +3,7 @@ import tensorflow.keras.backend as K
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
+#from keras.engine.topology import Layer
 
 def get_angles(pos, i, d_model):
       angle_rates = 1 / np.power(10000, (2 * (i//2)) / np.float32(d_model))
@@ -387,3 +388,95 @@ class PositionEmbedding(layers.Layer):
             return input_shape[0], input_shape[1], self.embed_dim
         elif len(input_shape) == 3:
             return input_shape[0], input_shape[1], input_shape[2], self.embed_dim
+
+class MemoryRepresentation(layers.Layer):
+    def __init__(self, input_dim, output_dim, num_hops, **kwargs):
+        self.output_dim = output_dim
+        self.num_hops = num_hops
+
+        #initial_A_value = np.random.uniform(0, 1, size=[self.output_dim, input_dim])
+        #initial_B_value = np.random.uniform(0, 1, size=[self.output_dim, input_dim])
+        # initial_H_value = np.random.uniform(0, 1, size=[self.output_dim, self.output_dim])
+        #initial_C_value = np.random.uniform(0, 1, size=[self.output_dim, input_dim])
+
+        self.A = tf.keras.layers.Dense(output_dim, use_bias=False) #K.variable(initial_A_value)
+        self.B = tf.keras.layers.Dense(output_dim, use_bias=False) #K.variable(initial_B_value)
+        # self.H = K.variable(initial_H_value)
+        self.C = tf.keras.layers.Dense(output_dim, use_bias=False) #K.variable(initial_C_value)
+        self.dense = tf.keras.layers.Dense(output_dim, use_bias=False)
+
+        super(MemoryRepresentation, self).__init__(**kwargs)
+
+    def split_heads(self, x):
+        """Split x into different heads, and transpose the resulting value.
+        The tensor is transposed to insure the inner dimensions hold the correct
+        values during the matrix multiplication.
+        Args:
+          x: A tensor with shape [batch_size, length, hidden_size]
+        Returns:
+          A tensor with shape [batch_size, num_heads, length, hidden_size/num_heads]
+        """
+        with tf.name_scope("split_heads"):
+            batch_size = tf.shape(x)[0]
+            length = tf.shape(x)[1]
+
+            # Calculate depth of last dimension after it has been split.
+            depth = self.output_dim
+
+            # Split the last dimension
+            x = tf.reshape(x, [batch_size, length, 1, depth])
+
+            # Transpose the result
+            return tf.transpose(x, [0, 2, 1, 3])
+    
+    def combine_heads(self, x):
+        """Combine tensor that has been split.
+        Args:
+          x: A tensor [batch_size, num_heads, length, hidden_size/num_heads]
+        Returns:
+          A tensor with shape [batch_size, length, hidden_size]
+        """
+        with tf.name_scope("combine_heads"):
+            batch_size = tf.shape(x)[0]
+            length = tf.shape(x)[2]
+            x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
+            return tf.reshape(x, [batch_size, length, self.output_dim])    
+
+    def call(self, inputs, mask=None):
+        q = self.A(inputs)
+        k = self.B(inputs)
+        v = self.C(inputs)
+
+        q = self.split_heads(q)
+        k = self.split_heads(k)
+        v = self.split_heads(v)
+        
+        # Scale q to prevent the dot product between q and k from growing too large.
+        depth = self.output_dim
+        q *= depth ** -0.5
+        
+        logits = tf.matmul(q, k, transpose_b=True)
+
+        # logits += self.bias
+        weights = tf.nn.softmax(logits, name="attention_weights")
+        attention_output = tf.matmul(weights, v)
+        attention_output = self.combine_heads(attention_output)
+        attention_output = self.dense(attention_output) + q[:,0,:,:]
+        #attention_output = tf.reshape(attention_output, (inputs.shape[0],inputs.shape[1],inputs.shape[2]))
+
+        for _ in range(self.num_hops - 1):
+          logits = tf.matmul(self.split_heads(attention_output), k, transpose_b=True)
+
+          # logits += self.bias
+          weights = tf.nn.softmax(logits)
+          
+          attention_output2 = tf.matmul(weights, v)
+          attention_output2 = self.combine_heads(attention_output2)
+          attention_output = self.dense(attention_output2) + attention_output
+
+        #attention_output = tf.reshape(attention_output, (K.shape(inputs)[0],K.shape(inputs)[1],K.shape(inputs)[2]))
+
+        return attention_output
+
+    def compute_output_shape(self, input_shape):
+        return tf.TensorShape(input_shape)
