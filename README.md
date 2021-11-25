@@ -2,6 +2,10 @@
 
 Code-Mixed Hate Classification
 
+### Architecture
+
+![Unified Framework](Diagram.png)
+
 ### Data Sources
 
 * Hinglish offensive Tweets - https://github.com/pmathur5k10/Hinglish-Offensive-Text-Classification
