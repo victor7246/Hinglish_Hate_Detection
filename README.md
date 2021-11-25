@@ -26,7 +26,7 @@ Code-Mixed Hate Classification
 ### Citation
 If you find this repo useful, please cite our paper:
 ```BibTex
-@article{SENGUPTA2021,
+@article{,
     title = {Does aggression lead to hate? Detecting and reasoning offensive traits in hinglish code-mixed texts},
     journal = {Neurocomputing},
     year = {2021},
